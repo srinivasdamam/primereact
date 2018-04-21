@@ -7,6 +7,7 @@ export class Slider extends Component {
 
     static defaultProps = {
         id: null,
+        value: null,
         animate: false,
         min: 0,
         max: 100,
@@ -19,6 +20,7 @@ export class Slider extends Component {
 
     static propsTypes = {
         id: PropTypes.string,
+        value: PropTypes.number,
         animate: PropTypes.bool,
         min: PropTypes.number,
         max: PropTypes.number,
@@ -38,6 +40,11 @@ export class Slider extends Component {
         this.onTouchStart = this.onTouchStart.bind(this);
         this.onTouchMove = this.onTouchMove.bind(this);
         this.handleValues = [];
+        this.isFloatValue = this.isFloat(this.props.value) || this.isFloat(this.props.step);
+    }
+
+    isFloat(val) {
+        return val != null && Number(val) === val && val % 1 !== 0;
     }
 
     onMouseDown(event, index) {
@@ -75,7 +82,7 @@ export class Slider extends Component {
 
         if (this.props.range) {
             if (this.props.step) {
-                this.handleStepChange(newValue, this.values[this.handleIndex]);
+                this.handleStepChange(newValue, this.values[this.handleIndex], event);
             }
             else {
                 this.handleValues[this.handleIndex] = handleValue;
@@ -84,7 +91,7 @@ export class Slider extends Component {
         }
         else {
             if (this.props.step) {
-                this.handleStepChange(newValue, this.value);
+                this.handleStepChange(newValue, this.value, event);
             }
             else {
                 this.handleValue = handleValue;
@@ -93,18 +100,25 @@ export class Slider extends Component {
         }
     }
 
-    handleStepChange(newValue, oldValue) {
-        let diff = (newValue - oldValue);
+    handleStepChange(newValue, oldValue, event) {
+        let diff = (newValue - oldValue),
+        originalEvent = event.originalEvent; 
 
         if (diff < 0 && (-1 * diff) >= this.props.step / 2) {
             newValue = oldValue - this.props.step;
-            this.updateValue(newValue);
-            this.updateHandleValue();
+            this.updateValue(newValue, event);
+            
+            if(originalEvent && !originalEvent.defaultPrevented) {
+                this.updateHandleValue();
+            }
         }
         else if (diff > 0 && diff >= this.props.step / 2) {
             newValue = oldValue + this.props.step;
-            this.updateValue(newValue);
-            this.updateHandleValue();
+            this.updateValue(newValue, event);
+            
+            if(originalEvent && !originalEvent.defaultPrevented) {
+                this.updateHandleValue();
+            }
         }
     }
 
@@ -166,7 +180,12 @@ export class Slider extends Component {
                 }
             }
 
-            this.values[this.handleIndex] = Math.floor(value);
+            if(this.isFloatValue) {
+                this.values[this.handleIndex] = value;
+            }
+            else {
+                this.values[this.handleIndex] = Math.floor(value);
+            }
 
             if (this.props.onChange) {
                 this.props.onChange({
@@ -185,7 +204,12 @@ export class Slider extends Component {
                 this.handleValue = 100;
             }
 
-            this.value = Math.floor(val);
+            if(this.isFloatValue) {
+                this.value = val;
+            }
+            else {
+                this.value = Math.floor(val);
+            }
 
             if (this.props.onChange) {
                 this.props.onChange({

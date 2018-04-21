@@ -529,12 +529,11 @@ export class Calendar extends Component {
     
     isDateBetween(start, end, dateMeta) {
         if(start && end) {
-            return start.getDate() < dateMeta.day && start.getMonth() <= dateMeta.month && start.getFullYear() <= dateMeta.year &&
-            end.getDate() > dateMeta.day && end.getMonth() >= dateMeta.month && end.getFullYear() >= dateMeta.year;
+            let date = new Date(dateMeta.year, dateMeta.month, dateMeta.day);
+            return start.getTime() <= date.getTime() && end.getTime() >= date.getTime();
         }
-        else {
-            return false; 
-        }
+        
+        return false;
     }
     
     isToday(today, day, month, year) {     
@@ -630,13 +629,22 @@ export class Calendar extends Component {
         }
     }
     
-    onInputFocus(event) {
+    onInputFocus(event) {      
+        if(this.refocus) {
+            this.refocus = false;
+            return;
+        }
+
         if(this.props.showOnFocus) {
             this.showOverlay();
         }
 
         if(this.props.onFocus) {
             this.props.onFocus(event);
+        }
+
+        if(event.target.getAttribute('data-isCellEditing')) {
+            this.refocus = true;
         }
     }
     
